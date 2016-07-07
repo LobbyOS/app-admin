@@ -1,0 +1,11 @@
+{
+  "name" : "Lobby Admin",
+  "short_description" : "Password protect your Lobby installation and prevent unwanted access.",
+  "category" : "accessories",
+  "sub_category" : "tools",
+  "version" : "0.1",
+  "author" : "Lobby",
+  "logo" : "true",
+  "author_page" : "https://lobby.subinsb.com",
+  "app_page" : "https://subinsb.com/lobby/app-admin"
+}
