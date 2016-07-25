@@ -7,6 +7,7 @@ use Hooks;
 use Lobby\DB;
 use Lobby\Modules;
 use Lobby\UI\Panel;
+use Response;
 
 class app_admin extends \Lobby\Module {
   
@@ -119,7 +120,10 @@ class app_admin extends \Lobby\Module {
           "created" => date("Y-m-d H:i:s")
         ));
       }
-      include __DIR__ . "/page/login.php";
+      ob_start();
+        include __DIR__ . "/page/login.php";
+      $html = ob_get_clean();
+      Response::setContent($html);
     });
   }
 }
