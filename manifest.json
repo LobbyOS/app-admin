@@ -3,7 +3,7 @@
   "short_description" : "Password protect your Lobby installation and prevent unwanted access.",
   "category" : "accessories",
   "sub_category" : "tools",
-  "version" : "0.1.1",
+  "version" : "0.1.2",
   "author" : "Lobby",
   "require" : {
     "lobby" : ">=0.9"
