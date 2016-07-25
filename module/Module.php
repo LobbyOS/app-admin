@@ -93,7 +93,6 @@ class app_admin extends \Lobby\Module {
       $sql = DB::getDBH()->prepare("CREATE TABLE IF NOT EXISTS `{$prefix}users` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `username` varchar(10) NOT NULL,
-        `email` tinytext NOT NULL,
         `password` varchar(255) NOT NULL,
         `name` varchar(30) NOT NULL,
         `created` datetime NOT NULL,
