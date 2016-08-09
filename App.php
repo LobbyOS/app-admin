@@ -1,12 +1,15 @@
 <?php
 namespace Lobby\App;
 
+use Lobby\App\admin\Fr\LS;
+
 class admin extends \Lobby\App {
   
   public function page($page){
+    require_once $this->dir . "/src/inc/load.php";
+    
     if($page === "/logout"){
-      \Fr\LS::logout();
-      \Response::redirect("/admin/login");
+      LS::logout();
     }else{
       return "auto";
     }

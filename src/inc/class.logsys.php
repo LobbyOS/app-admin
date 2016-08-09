@@ -1,5 +1,5 @@
 <?php
-namespace Fr;
+namespace Lobby\App\admin\Fr;
 
 /**
 .---------------------------------------------------------------------------.
@@ -22,10 +22,9 @@ namespace Fr;
 /**
 .---------------------------------------------------------------------------.
 |  Software:      PHP Login System - PHP logSys                             |
-|  Version:       0.6 (Last Updated on 2016 June 17)                        |
-|  Contact:       http://github.com/subins2000/logsys                       |
-|  Documentation: https://subinsb.com/php-logsys                            |
-|  Support:       http://subinsb.com/ask/php-logsys                         |
+|  Version:       0.6.3 (Last Updated on 2016 July 30)                      |
+|  Documentation: http://subinsb.com/php-logsys                             |
+|  Contribute:    https://github.com/subins2000/logSys                      |
 '---------------------------------------------------------------------------'
 */
 
@@ -140,20 +139,26 @@ class LS {
       /**
        * Pages that doesn't require logging in.
        * Exclude login page, but include REGISTER page.
-       * Use Relative links or $_SERVER['REQUEST_URI']
+       * Use RELATIVE links. To find the relative link of
+       * a page, do var_dump(Fr\LS::curPage());
        */
-      "no_login" => array(
-        
-      ),
+      "no_login" => array(),
+      
+      /**
+       * Pages that both logged in and not logged in users can access
+       */
+      "everyone" => array(),
+      
       /**
        * The login page. ex : /login.php or /accounts/login.php
        */
       "login_page" => "",
+      
       /**
        * The home page. The main page for logged in users.
        * logSys redirects to here after user logs in
        */
-      "home_page" => "",
+      "home_page" => ""
     ),
     
     /**
@@ -283,7 +288,7 @@ class LS {
         */
         array_push(self::$config['pages']['no_login'], self::$config['pages']['login_page']);
         
-        self::$dbh = new \logSysLobbyDB;
+        self::$dbh = new \Lobby\App\admin\DB;
         self::$db = true;
         
         self::$cookie = isset($_COOKIE['logSyslogin']) ? $_COOKIE['logSyslogin'] : false;
@@ -325,7 +330,7 @@ class LS {
         if(self::$config['features']['two_step_login'] === true && self::$loggedIn){
           $login_page = self::curPage() === self::$config['pages']['login_page'];
 
-          if(!isset($_COOKIE['logSysdevice']) && $login_page === false){
+          if(!isset($_SESSION['device_check']) && !isset($_COOKIE['logSysdevice']) && $login_page === false){
             /**
              * The device cookie is not even set. So, logout
              */
@@ -343,6 +348,9 @@ class LS {
               self::logout();
               $called_from = "login";
             }else{
+              /**
+               * This session has been checked and verified
+               */
               $_SESSION['device_check'] = 1;
             }
           }
@@ -367,9 +375,14 @@ class LS {
    */
   public static function init() {
     self::construct();
-    if(self::$loggedIn === true && array_search(self::curPage(), self::$config['pages']['no_login']) !== false){
+    if(in_array(self::curPage(), self::$config['pages']['everyone'])){
+      /**
+       * No redirects as this page can be accessed
+       * by anyone whether he/she is logged in or not
+       */
+    }else if(self::$loggedIn === true && in_array(self::curPage(), self::$config['pages']['no_login'])){
       self::redirect(self::$config['pages']['home_page']);
-    }elseif(self::$loggedIn === false && array_search(self::curPage(), self::$config['pages']['no_login']) === false){
+    }else if(self::$loggedIn === false && array_search(self::curPage(), self::$config['pages']['no_login']) === false){
       self::redirect(self::$config['pages']['login_page']);
     }
     self::$init_called = true;
@@ -395,19 +408,20 @@ class LS {
       
       $sql = self::$dbh->prepare($query);
       $sql->bindValue(":login", $username);
-      $sql->execute();
       
-      if($sql->rowCount() == 0){
+      $sql->execute();
+      $cols = $sql->fetch(\PDO::FETCH_ASSOC);
+      
+      if(empty($cols)){
         // No such user like that
         return false;
       }else{
         /**
          * Get the user details
          */
-        $rows = $sql->fetch(\PDO::FETCH_ASSOC);
-        $us_id = $rows['id'];
-        $us_pass = $rows['password'];
-        $status = $rows['attempt'];
+        $us_id = $cols['id'];
+        $us_pass = $cols['password'];
+        $status = $cols['attempt'];
         
         if(substr($status, 0, 2) == "b-"){
           $blockedTime = substr($status, 2);
@@ -585,10 +599,10 @@ class LS {
        * The user gave the password reset token. Check if the token is valid.
        */
       $reset_pass_token = urldecode($_GET['resetPassToken']);
-      $sql = self::$dbh->prepare("SELECT `uid` FROM `". self::$config['db']['token_table'] ."` WHERE `token` = ?");
+      $sql = self::$dbh->prepare("SELECT COUNT(1) FROM `". self::$config['db']['token_table'] ."` WHERE `token` = ?");
       $sql->execute(array($reset_pass_token));
       
-      if($sql->rowCount() == 0 || $reset_pass_token == ""){
+      if($sql->fetchColumn() == 0 || $reset_pass_token == ""){
         echo "<h3>Error : Wrong/Invalid Token</h3>";
         $curStatus = "invalidToken"; // The token user gave was not valid
       }else{
@@ -619,7 +633,9 @@ class LS {
       $sql = self::$dbh->prepare("SELECT `uid` FROM `". self::$config['db']['token_table'] ."` WHERE `token` = ?");
       $sql->execute(array($reset_pass_token));
       
-      if( $sql->rowCount() == 0 || $reset_pass_token == "" ){
+      $user = $sql->fetchColumn();
+      
+      if( $user == null || $reset_pass_token == null ){
         echo "<h3>Error : Wrong/Invalid Token</h3>";
         $curStatus = "invalidToken"; // The token user gave was not valid
       }else{
@@ -635,7 +651,7 @@ class LS {
            * change the password as \Fr\LS::changePassword()
            * requires the user to be logged in.
            */
-          self::$user = $sql->fetchColumn();
+          self::$user = $user;
           self::$loggedIn = true;
           
           if(self::changePassword($_POST['logSysForgotPassNewPassword'])){
@@ -664,14 +680,16 @@ class LS {
       }else{
         $sql = self::$dbh->prepare("SELECT `email`, `id` FROM `". self::$config['db']['table'] ."` WHERE `username`=:login OR `email`=:login");
         $sql->bindValue(":login", $identification);
+        
         $sql->execute();
-        if($sql->rowCount() == 0){
+        $cols  = $sql->fetch(\PDO::FETCH_ASSOC);
+        
+        if(empty($cols)){
           echo "<h3>Error : User Not Found</h3>";
           $curStatus = "userNotFound"; // The user with the identity given was not found in the users database
         }else{
-          $rows  = $sql->fetch(\PDO::FETCH_ASSOC);
-          $email = $rows['email'];
-          $uid   = $rows['id'];
+          $email = $cols['email'];
+          $uid   = $cols['id'];
           
           /**
            * Make token and insert into the table
@@ -722,15 +740,15 @@ class LS {
   public static function userExists($identification){
     self::construct();
     if(self::$config['features']['email_login'] === true){
-      $query = "SELECT `id` FROM `". self::$config['db']['table'] ."` WHERE `username`=:login OR `email`=:login";
+      $query = "SELECT COUNT(1) FROM `". self::$config['db']['table'] ."` WHERE `username`=:login OR `email`=:login";
     }else{
-      $query = "SELECT `id` FROM `". self::$config['db']['table'] ."` WHERE `username`=:login";
+      $query = "SELECT COUNT(1) FROM `". self::$config['db']['table'] ."` WHERE `username`=:login";
     }
     $sql = self::$dbh->prepare($query);
     $sql->execute(array(
       ":login" => $identification
     ));
-    return $sql->rowCount() == 0 ? false : true;
+    return $sql->fetchColumn() == "0" ? false : true;
   }
   
   /**
@@ -876,6 +894,11 @@ class LS {
           $sql = self::$dbh->prepare("INSERT INTO `". self::$config['two_step_login']['devices_table'] ."` (`uid`, `token`, `last_access`) VALUES (?, ?, NOW())");
           $sql->execute(array($uid, $device_token));
           setcookie("logSysdevice", $device_token, strtotime(self::$config['two_step_login']['expire']), self::$config['cookies']['path'], self::$config['cookies']['domain']);
+        }else{
+          /**
+           * Verify login for this session
+           */
+          $_SESSION["device_check"] = "1";
         }
         
         /**

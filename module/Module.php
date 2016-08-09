@@ -2,8 +2,8 @@
 namespace Lobby\Module;
 
 use Assets;
-use Fr\LS;
 use Hooks;
+use Lobby\App\admin\Fr\LS;
 use Lobby\DB;
 use Lobby\Modules;
 use Lobby\UI\Panel;
@@ -87,21 +87,32 @@ class app_admin extends \Lobby\Module {
       DB::saveOption("admin_secure_cookie", $cookie);
       
       $prefix = DB::getPrefix();
+      
       /**
        * Create `users` TABLE
        */
-      $sql = DB::getDBH()->prepare("CREATE TABLE IF NOT EXISTS `{$prefix}users` (
-        `id` int(11) NOT NULL AUTO_INCREMENT,
-        `username` varchar(10) NOT NULL,
-        `password` varchar(255) NOT NULL,
-        `name` varchar(30) NOT NULL,
-        `created` datetime NOT NULL,
-        `attempt` varchar(15) NOT NULL DEFAULT '0',
-        PRIMARY KEY (`id`)
-      ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;");
-      if($sql->execute() != 0){
-        DB::saveOption("admin_installed", "true");
+      if(DB::getType() === "mysql"){
+        $sql = DB::getDBH()->prepare("CREATE TABLE IF NOT EXISTS `{$prefix}users` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `username` varchar(20) NOT NULL,
+          `password` varchar(255) NOT NULL,
+          `name` varchar(30) NOT NULL,
+          `created` datetime NOT NULL,
+          `attempt` varchar(15) NOT NULL DEFAULT '0',
+          PRIMARY KEY (`id`)
+        ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;");
+      }else{
+        $sql = DB::getDBH()->prepare("CREATE TABLE IF NOT EXISTS `{$prefix}users` (
+          `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+          `username` varchar(20) NOT NULL,
+          `password` varchar(255) NOT NULL,
+          `name` varchar(30) NOT NULL,
+          `created` datetime NOT NULL,
+          `attempt` varchar(15) NOT NULL DEFAULT '0'
+        );");
       }
+      $sql->execute();
+      DB::saveOption("admin_installed", "true");
     }
   }
   

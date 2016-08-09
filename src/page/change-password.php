@@ -1,4 +1,6 @@
 <?php
+use Lobby\App\admin\Fr\LS;
+
 $this->setTitle("Change Password");
 ?>
 <div class="contents">
@@ -10,12 +12,12 @@ $this->setTitle("Change Password");
     $retypePass = $_POST['retype_password'];
     
     if($curPass != null && $newPass != null && $retypePass != null){
-      if(!\Fr\LS::login("admin", $curPass, false, false)){
+      if(!LS::login("admin", $curPass, false, false)){
         echo ser("Login Failed", "Couldn't login to your account to change password.");
       }else if($newPass !== $retypePass){
         echo ser("Passwords Doesn't match"), "The passwords you entered didn't match. Try again.</p></p>";
       }else{
-        $changePass = \Fr\LS::changePassword($newPass);
+        $changePass = LS::changePassword($newPass);
         if($changePass === true){
           echo sss("Password Changed Successfully", "Your password was updated.");
         }

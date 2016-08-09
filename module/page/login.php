@@ -1,8 +1,10 @@
 <?php
+use Lobby\App\admin\Fr\LS;
+
 /**
  * User is logged in, so redirect to Admin main page
  */
-if(\Fr\LS::$loggedIn){
+if(LS::$loggedIn){
   \Response::redirect("/admin");
 }
 if(isset($_POST["username"]) && isset($_POST["password"])){
@@ -11,7 +13,7 @@ if(isset($_POST["username"]) && isset($_POST["password"])){
   if($user == "" || $pass == ""){
     $error = array("Username / Password Wrong", "The username or password you submitted was wrong.");
   }else{
-    $login = \Fr\LS::login($user, $pass, isset($_POST['remember_me']));
+    $login = LS::login($user, $pass, isset($_POST['remember_me']));
     if($login === false){
       $error = array("Username / Password Wrong", "The username or password you submitted was wrong.");
     }else if(is_array($login) && $login['status'] == "blocked"){

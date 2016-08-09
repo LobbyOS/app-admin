@@ -1,5 +1,12 @@
 <?php
-class logSysLobbyDB {
+namespace Lobby\App\admin;
+
+use Lobby\App\admin\Fr\LS;
+
+/**
+ * Mock PDO
+ */
+class DB {
   public function prepare($query){
     $obj = \Lobby\DB::getDBH()->prepare($query);
     return $obj;
@@ -8,10 +15,10 @@ class logSysLobbyDB {
 
 require_once __DIR__ . "/class.logsys.php";
 
-$salt = Lobby\DB::getOption("admin_secure_salt");
-$cookie = Lobby\DB::getOption("admin_secure_cookie");
+$salt = \Lobby\DB::getOption("admin_secure_salt");
+$cookie = \Lobby\DB::getOption("admin_secure_cookie");
 
-\Fr\LS::config(array(
+LS::config(array(
   "db" => array(
     "table" => \Lobby\DB::getPrefix() . "users"
   ),
@@ -23,5 +30,8 @@ $cookie = Lobby\DB::getOption("admin_secure_cookie");
   "keys" => array(
     "cookie" => $cookie,
     "salt" => $salt
+  ),
+  "pages" => array(
+    "login_page" => \Lobby::u("/admin/login")
   )
 ));
