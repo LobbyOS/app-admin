@@ -6,7 +6,7 @@
   "version" : "0.2",
   "author" : "Lobby",
   "require" : {
-    "lobby" : ">=0.9"
+    "lobby" : ">=0.9.3"
   },
   "logo" : "true",
   "author_page" : "https://lobby.subinsb.com",

@@ -10,7 +10,7 @@ $this->setTitle("Change Password");
     $curPass = $_POST['current_password'];
     $newPass = $_POST['new_password'];
     $retypePass = $_POST['retype_password'];
-    
+
     if($curPass != null && $newPass != null && $retypePass != null){
       if(!LS::login("admin", $curPass, false, false)){
         echo ser("Login Failed", "Couldn't login to your account to change password.");

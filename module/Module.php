@@ -10,14 +10,14 @@ use Lobby\UI\Panel;
 use Response;
 
 class app_admin extends \Lobby\Module {
-  
+
   public function init(){
     if(\Lobby::status("lobby.assets-serve") === false){
       $this->install();
       $this->routes();
-      
+
       require_once $this->app->dir . "/src/inc/load.php";
-      
+
       if(LS::$loggedIn){
         /**
          * Logged In
@@ -58,14 +58,14 @@ class app_admin extends \Lobby\Module {
             \Response::redirect("/admin/login");
           }
         }
-        
-        Hooks::addFilter("panel.left.items", function($left){
+
+        Hooks::addFilter("panel.top.left.items", function($left){
           unset($left["lobbyAdmin"]);
           if(Modules::exists("app_indi"))
             unset($left["indiModule"]);
           return $left;
         });
-        
+
         Assets::removeJS("notify");
         Assets::removeCSS("notify");
       }
@@ -85,9 +85,9 @@ class app_admin extends \Lobby\Module {
       $cookie = \Helper::randStr(15);
       DB::saveOption("admin_secure_salt", $salt);
       DB::saveOption("admin_secure_cookie", $cookie);
-      
+
       $prefix = DB::getPrefix();
-      
+
       /**
        * Create `users` TABLE
        */
@@ -115,7 +115,7 @@ class app_admin extends \Lobby\Module {
       DB::saveOption("admin_installed", "true");
     }
   }
-  
+
   /**
    * Add routes
    */
